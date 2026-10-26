@@ -12,9 +12,16 @@ function setSidebar(open) {
   document.body.classList.toggle("overflow-hidden", open);
 }
 
-$("menu-toggle")?.addEventListener("click", () => setSidebar(true));
+let openedAt = 0;
+$("menu-toggle")?.addEventListener("click", () => {
+  openedAt = performance.now();
+  setSidebar(true);
+});
 $("sidebar-close")?.addEventListener("click", () => setSidebar(false));
-backdrop?.addEventListener("click", () => setSidebar(false));
+backdrop?.addEventListener("click", () => {
+  // Ignore the ghost click some Android browsers fire right after opening.
+  if (performance.now() - openedAt > 250) setSidebar(false);
+});
 window.addEventListener("keydown", (e) => e.key === "Escape" && setSidebar(false));
 sidebar?.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setSidebar(false)));
 window.addEventListener("resize", () => {

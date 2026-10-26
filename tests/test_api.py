@@ -13,7 +13,10 @@ def client(tmp_db):
 def test_health(client):
     r = client.get("/api/health")
     assert r.status_code == 200
-    assert r.json()["ok"] is True
+    body = r.json()
+    assert body["ok"] is True
+    assert "dashboard_auth" in body
+    assert "proxy_token" in body
 
 
 def test_pages_render(client):
@@ -97,3 +100,16 @@ def test_key_change_invalidates_catalog(client):
     r = client.post("/api/keys", json={"name": "k", "api_key": "oc_sk_catalog"})
     assert r.status_code == 200
     assert usage._catalog["data"] is None
+
+
+def test_settings_mobile_markup(client):
+    html = client.get("/settings").text
+    for needle in (
+        'id="settings-auth"',
+        'id="settings-proxy"',
+        'class="card min-w-0 p-5"',
+        "break-all",
+        "h-10 w-10",
+        "w-full justify-center",
+    ):
+        assert needle in html

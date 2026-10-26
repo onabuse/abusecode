@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.2.2 — 2026-10-26
+
+### Fixed
+
+- **Settings page overflowed on Android.** Long base/upstream URLs, environment
+  names and defaults no longer push the card wider than the screen. Label/value
+  rows stack on small screens, the copy target is now 40×40px, and the
+  configuration tiles wrap instead of colliding.
+- **Focusing an input zoomed the page on Android.** Inputs, selects and textareas
+  are 16px on mobile (14px from `sm` up), which prevents Chrome's auto-zoom.
+  Applies to keys, playground, logs, models, overview and login.
+- **Models search overflowed next to Refresh.** The search field now shrinks
+  (`min-w-0 flex-1`) and the button stays fixed on narrow screens.
+- **Long toasts could overflow the viewport.** Toasts are capped at
+  `100vw - 2rem` and wrap.
+- **Settings refresh did nothing.** The global Refresh button now reloads live
+  auth/proxy status; the Connection card shows current dashboard-auth and
+  proxy-token state from `/api/health`.
+- The destructive "Clear usage logs" action is full-width with extra vertical
+  padding on mobile and keeps the two-tap inline confirmation.
+
 ## 1.2.1 — 2026-10-26
 
 ### Fixed

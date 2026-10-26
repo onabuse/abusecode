@@ -8,9 +8,9 @@
       <p class="eyebrow">Catalog</p>
       <h2 class="mt-1 text-lg font-semibold text-fg">Available models</h2>
     </div>
-    <div class="flex items-center gap-2">
-      <input id="catalog-search" type="search" class="input w-full text-[12px] sm:w-56" placeholder="Search models…" />
-      <button id="catalog-refresh" class="btn btn-ghost px-3 py-2 text-xs" title="Refresh from upstream">Refresh</button>
+    <div class="flex w-full items-center gap-2 sm:w-auto">
+      <input id="catalog-search" type="search" class="input min-w-0 flex-1 text-base sm:w-56 sm:flex-none sm:text-[12px]" placeholder="Search models…" />
+      <button id="catalog-refresh" class="btn btn-ghost shrink-0 px-3 py-2 text-xs" title="Refresh from upstream">Refresh</button>
     </div>
   </div>
   <p class="mono mt-2 text-[11px] text-dim" id="catalog-meta">loading catalog…</p>

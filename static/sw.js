@@ -104,7 +104,7 @@ self.addEventListener("fetch", (event) => {
     (async () => {
       const network = fetch(req)
         .then(async (res) => {
-          if (res.ok) {
+          if (res.ok && !res.redirected) {
             const cache = await caches.open(CACHE);
             await cache.put(req, res.clone());
           }

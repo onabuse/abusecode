@@ -43,6 +43,7 @@ const baseOrigin = $("base-origin");
 if (baseOrigin) baseOrigin.textContent = location.origin + "/v1";
 
 async function pollHealth() {
+  if (document.hidden) return;
   try {
     const h = await api("/api/health");
     $("health").textContent = h.active_keys ? `${h.active_keys} key${h.active_keys > 1 ? "s" : ""}` : "no keys";
@@ -56,6 +57,12 @@ async function pollHealth() {
 
 pollHealth();
 setInterval(pollHealth, 15000);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) pollHealth();
+});
+window.addEventListener("pageshow", (e) => {
+  if (e.persisted) setSidebar(false);
+});
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

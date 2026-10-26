@@ -27,8 +27,8 @@ export function toast(msg, isErr = false) {
 
 export async function api(path, opts = {}) {
   const res = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
     ...opts,
+    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
   });
   if (!res.ok) {
     if (res.status === 401 && !path.startsWith("/api/login") && location.pathname !== "/login") {
@@ -69,9 +69,13 @@ export async function copyText(text) {
       field.value = text;
       field.setAttribute("readonly", "");
       field.style.position = "fixed";
+      field.style.top = "0";
+      field.style.left = "0";
       field.style.opacity = "0";
       document.body.appendChild(field);
+      field.focus();
       field.select();
+      field.setSelectionRange(0, text.length);
       const ok = document.execCommand("copy");
       field.remove();
       if (!ok) throw new Error("copy failed");

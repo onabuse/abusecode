@@ -46,7 +46,20 @@ function renderKeys(keys) {
       const id = btn.dataset.id;
       if (btn.dataset.act === "toggle") patchKey(id, btn.dataset.active !== "1");
       else if (btn.dataset.act === "reset") patchKey(id, true);
-      else if (confirm("Delete this key? This cannot be undone.")) delKey(id);
+      else if (btn.dataset.act === "del") {
+        if (btn.dataset.armed === "1") {
+          clearTimeout(btn._armTimer);
+          btn.dataset.armed = "";
+          delKey(id);
+          return;
+        }
+        btn.dataset.armed = "1";
+        btn.textContent = "Confirm?";
+        btn._armTimer = setTimeout(() => {
+          btn.dataset.armed = "";
+          if (btn.isConnected) btn.textContent = "Delete";
+        }, 3000);
+      }
     });
   });
 }

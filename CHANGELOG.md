@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.2.1 — 2026-10-26
+
+### Fixed
+
+- **Service worker cached the homepage for every offline route.** Navigation
+  requests are now cached per URL and fall back to that exact route only. A
+  non-cached route shows a dedicated offline page instead of the overview.
+- **Redirects were cached as app shell.** Both navigation and asset responses
+  are cached only when they are `ok` and not redirected.
+- **UI shifted while scrolling on Android.** The header is solid and sticky
+  (no backdrop blur), the body uses `min-h-svh` and clips horizontal overflow,
+  and wide tables stay inside their own scroll containers.
+- **Stale responses replaced newer data.** Logs, keys, models, catalog and
+  overview requests use sequence guards so a slow earlier response cannot
+  overwrite the current filters or page.
+- **Playground streams leaked across requests.** The previous request is
+  aborted, abort errors are ignored, and output auto-scrolls while streaming.
+  Clear also cancels an in-flight request.
+- **Catalog search rebuilt too often.** Search is debounced and the catalog,
+  playground output and key list have bounded scroll heights.
+- **Android ghost taps closed the menu instantly.** The backdrop ignores taps
+  within 250 ms of opening, the body scroll lock is released on close, and the
+  menu resets on desktop resize and bfcache restores.
+- **Delete actions used blocking native dialogs.** Keys and usage logs now use
+  a two-tap inline confirmation.
+- **Failed catalog loads stayed blank.** Errors are rendered in the catalog
+  area instead of leaving the loading placeholder.
+- **Copy was unreliable outside secure contexts.** The Android fallback now
+  focuses and selects the temporary field before copying.
+
 ## 1.2.0 — 2026-10-26
 
 ### Fixed

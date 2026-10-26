@@ -1,6 +1,6 @@
 import { $, api, esc, fmt, statusPill, timeOf } from "./lib.js";
 
-const state = { offset: 0, limit: 50, model: "", status: "" };
+const state = { offset: 0, limit: 50, model: "", status: "", total: 0 };
 
 function rowsHtml(items) {
   if (!items.length) {
@@ -45,6 +45,7 @@ async function load() {
   try {
     const data = await api("/api/logs?" + params.toString());
     if (seq !== loadSeq) return;
+    state.total = Number(data.total) || 0;
     $("logs").innerHTML = rowsHtml(data.items);
     const start = data.total ? state.offset + 1 : 0;
     const end = Math.min(state.offset + state.limit, data.total);
@@ -63,7 +64,11 @@ async function loadModels() {
   try {
     const rows = await api("/api/models");
     const sel = $("filter-model");
+    if (!sel) return;
+    const seen = new Set(Array.from(sel.options, (o) => o.value));
     rows.forEach((r) => {
+      if (!r.model || seen.has(r.model)) return;
+      seen.add(r.model);
       const opt = document.createElement("option");
       opt.value = r.model;
       opt.textContent = r.model;
@@ -75,16 +80,19 @@ async function loadModels() {
 $("filter-model").addEventListener("change", (e) => {
   state.model = e.target.value;
   state.offset = 0;
+  state.total = 0;
   load();
 });
 $("filter-status").addEventListener("change", (e) => {
   state.status = e.target.value;
   state.offset = 0;
+  state.total = 0;
   load();
 });
 $("filter-limit").addEventListener("change", (e) => {
   state.limit = Number(e.target.value);
   state.offset = 0;
+  state.total = 0;
   load();
 });
 $("prev").addEventListener("click", () => {
@@ -92,6 +100,7 @@ $("prev").addEventListener("click", () => {
   load();
 });
 $("next").addEventListener("click", () => {
+  if (state.offset + state.limit >= state.total) return;
   state.offset += state.limit;
   load();
 });

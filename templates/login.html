@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/app.css" />
+  <link rel="stylesheet" href="/static/css/app.css?v={{ version }}" />
 </head>
-<body class="hero-bg flex min-h-screen items-center justify-center px-4">
+<body class="hero-bg flex min-h-svh items-center justify-center overflow-x-hidden px-4">
   <div class="w-full max-w-sm">
     <div class="mb-6 flex items-center justify-center gap-2.5">
       <span class="glow text-accent">{{ icon("route", "h-6 w-6") }}</span>
@@ -37,7 +37,7 @@
   </div>
 
   <script type="module">
-    import { $, api, toast } from "/static/js/lib.js";
+    import { $, api, toast } from "/static/js/lib.js?v={{ version }}";
     $("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const err = $("login-error");

@@ -6,6 +6,7 @@ const meta = $("pg-meta");
 let controller = null;
 
 function setStatus(text, ok = true) {
+  if (!statusPill) return;
   statusPill.textContent = text;
   statusPill.className = "pill " + (ok ? "pill-ok" : "pill-err");
 }
@@ -56,6 +57,7 @@ async function send(e) {
   const stream = $("pg-stream").checked;
   const max = Number($("pg-max").value) || 512;
   if (!input) return toast("Enter a prompt", true);
+  if (!out || !meta) return;
 
   controller?.abort();
   controller = new AbortController();
@@ -84,6 +86,7 @@ async function send(e) {
         message = body?.error?.message || body?.detail || JSON.stringify(body, null, 2);
       } catch {}
       out.textContent = message || `HTTP ${res.status}`;
+      out.scrollTop = 0;
       meta.textContent = `HTTP ${res.status} · ${reqId}`;
       return;
     }
@@ -91,6 +94,7 @@ async function send(e) {
     if (!stream) {
       const body = await res.json();
       out.textContent = textFrom(body) || JSON.stringify(body, null, 2);
+      out.scrollTop = 0;
       const u = usageFrom(body);
       const ms = Math.round(performance.now() - started);
       meta.textContent = `${ms} ms${u ? ` · ${u.total_tokens ?? (u.input_tokens || 0) + (u.output_tokens || 0)} tok` : ""} · ${reqId}`;
@@ -131,28 +135,39 @@ async function send(e) {
         }
         usage = usageFrom(obj) || usage;
         out.textContent = text || data;
+        out.scrollTop = out.scrollHeight;
       }
     }
 
     if (!text) text = "(empty response)";
     out.textContent = text;
+    out.scrollTop = out.scrollHeight;
     const ms = Math.round(performance.now() - started);
     const tok = usage
       ? usage.total_tokens ?? (usage.input_tokens || 0) + (usage.output_tokens || 0)
       : null;
     meta.textContent = `${ms} ms${tok != null ? ` · ${tok} tok` : ""} · ${reqId}`;
   } catch (err) {
+    if (err.name === "AbortError") return;
     setStatus("error", false);
+    if (!out) return;
     out.textContent = String(err.message || err);
-    meta.textContent = "—";
+    out.scrollTop = 0;
+    if (meta) meta.textContent = "—";
   }
 }
 
 $("pg-form").addEventListener("submit", send);
 $("pg-clear").addEventListener("click", () => {
+  controller?.abort();
+  controller = null;
+  if (!out || !meta) return;
   out.textContent = "Response will appear here…";
+  out.scrollTop = 0;
   meta.textContent = "—";
   setStatus("idle");
 });
+
+window.addEventListener("pagehide", () => controller?.abort());
 
 loadCatalog();

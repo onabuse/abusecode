@@ -93,6 +93,9 @@ async function loadCatalog(refresh = false) {
   } catch (e) {
     if (seq !== catalogSeq) return;
     $("catalog-meta").textContent = "catalog error: " + e.message;
+    if (!catalogData.length) {
+      $("catalog").innerHTML = `<p class="text-sm text-[#f0a0a0]">${esc(e.message)}</p>`;
+    }
   }
 }
 

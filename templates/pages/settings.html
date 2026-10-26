@@ -10,29 +10,39 @@
     </div>
     <h2 class="mt-2 text-lg font-semibold text-fg">Connection</h2>
     <dl class="mt-4 space-y-3 text-sm">
-      <div class="flex items-center justify-between gap-3 border-b border-line pb-3">
-        <dt class="text-dim">Base URL</dt>
-        <dd class="mono flex items-center gap-2 text-[12px] text-fg">
-          <span id="settings-base" class="truncate">/v1</span>
-          <button id="copy-settings-base" class="btn btn-ghost p-1.5" aria-label="Copy">{{ icon("copy", "h-3.5 w-3.5") }}</button>
+      <div class="flex flex-col gap-1 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <dt class="shrink-0 text-dim">Base URL</dt>
+        <dd class="mono flex min-w-0 items-center gap-2 text-[12px] text-fg">
+          <span id="settings-base" class="min-w-0 break-all">/v1</span>
+          <button id="copy-settings-base"
+            class="btn btn-ghost h-10 w-10 shrink-0 justify-center p-0"
+            aria-label="Copy base URL">{{ icon("copy", "h-4 w-4") }}</button>
         </dd>
       </div>
-      <div class="flex items-center justify-between gap-3 border-b border-line pb-3">
-        <dt class="text-dim">Upstream</dt>
-        <dd class="mono truncate text-[12px] text-fg">{{ upstream }}</dd>
+      <div class="flex flex-col gap-1 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <dt class="shrink-0 text-dim">Upstream</dt>
+        <dd class="mono min-w-0 break-all text-[12px] text-fg" title="{{ upstream }}">{{ upstream }}</dd>
       </div>
       <div class="flex items-center justify-between gap-3 border-b border-line pb-3">
         <dt class="text-dim">App version</dt>
         <dd class="mono text-[12px] text-fg">v{{ version }}</dd>
       </div>
-      <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center justify-between gap-3 border-b border-line pb-3">
         <dt class="text-dim">Key rotation</dt>
-        <dd class="mono text-[12px] text-accent">least-recently-used</dd>
+        <dd class="mono min-w-0 truncate text-right text-[12px] text-accent">least-recently-used</dd>
+      </div>
+      <div class="flex items-center justify-between gap-3 border-b border-line pb-3">
+        <dt class="text-dim">Dashboard auth</dt>
+        <dd id="settings-auth" class="mono text-[12px] text-dim">—</dd>
+      </div>
+      <div class="flex items-center justify-between gap-3">
+        <dt class="text-dim">Proxy token</dt>
+        <dd id="settings-proxy" class="mono text-[12px] text-dim">—</dd>
       </div>
     </dl>
   </div>
 
-  <div class="card p-5">
+  <div class="card min-w-0 p-5">
     <div class="flex items-center gap-2">
       <span class="text-accent">{{ icon("cog", "h-4 w-4") }}</span>
       <p class="eyebrow">Environment</p>
@@ -51,12 +61,12 @@
         ("ABUSECODE_SESSION_MAX_AGE", "Session lifetime (seconds)", "43200"),
         ("HOST / PORT", "Bind address", "0.0.0.0:8000")
       ] %}
-      <div class="tile px-3 py-2">
-        <div class="flex items-center justify-between gap-3">
-          <span class="mono text-[12px] text-fg">{{ name }}</span>
-          <span class="mono truncate text-[11px] text-dim">{{ default }}</span>
+      <div class="tile min-w-0 px-3 py-2">
+        <div class="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <span class="mono break-all text-[12px] text-fg">{{ name }}</span>
+          <span class="mono min-w-0 break-all text-[11px] text-dim sm:text-right">{{ default }}</span>
         </div>
-        <p class="mt-0.5 text-[11px] text-dim">{{ desc }}</p>
+        <p class="mt-1 text-[11px] leading-relaxed text-dim">{{ desc }}</p>
       </div>
       {% endfor %}
     </div>
@@ -72,7 +82,7 @@
   <p class="mt-1 text-sm text-muted">
     Clearing usage deletes all metering history. API keys are not affected.
   </p>
-  <button id="clear-logs" class="btn btn-danger mt-4 px-4 py-2 text-sm">
+  <button id="clear-logs" class="btn btn-danger mt-4 w-full justify-center px-4 py-2.5 text-sm sm:w-auto">
     {{ icon("trash", "h-4 w-4") }} Clear usage logs
   </button>
 </section>

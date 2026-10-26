@@ -1,4 +1,6 @@
-import { $, api, esc, fmt } from "./lib.js";
+import { $, api, esc, fmt, toast, copyText } from "./lib.js";
+
+let catalogData = [];
 
 function renderModels(rows) {
   const body = $("models-body");
@@ -53,6 +55,42 @@ function renderEndpoints(rows) {
     .join("");
 }
 
+function renderCatalog(filter = "") {
+  const box = $("catalog");
+  const q = filter.trim().toLowerCase();
+  const rows = catalogData.filter((m) => m.id.toLowerCase().includes(q));
+  if (!rows.length) {
+    box.innerHTML = `<p class="text-sm text-dim">${catalogData.length ? "No models match." : "Catalog unavailable."}</p>`;
+    return;
+  }
+  box.innerHTML = rows
+    .map((m) => {
+      const free = m.id.endsWith("-free");
+      return `<button type="button" data-model="${esc(m.id)}"
+        class="tile flex items-center justify-between gap-2 px-3 py-2 text-left transition-colors hover:bg-[#3a3a3a]">
+        <span class="mono min-w-0 truncate text-[12px] text-fg">${esc(m.id)}</span>
+        <span class="pill shrink-0 ${free ? "pill-ok" : "pill-idle"}">${free ? "free" : "paid"}</span>
+      </button>`;
+    })
+    .join("");
+  box.querySelectorAll("button[data-model]").forEach((btn) =>
+    btn.addEventListener("click", () => copyText(btn.dataset.model))
+  );
+}
+
+async function loadCatalog(refresh = false) {
+  try {
+    const cat = await api("/api/catalog" + (refresh ? "?refresh=true" : ""));
+    catalogData = cat.data || [];
+    $("catalog-meta").textContent = cat.error
+      ? "upstream error: " + cat.error
+      : `${catalogData.length} models · ${cat.cached ? "cached" : "fetched"} ${cat.fetched_at ? new Date(cat.fetched_at).toLocaleTimeString() : ""}`;
+    renderCatalog($("catalog-search").value);
+  } catch (e) {
+    $("catalog-meta").textContent = "catalog error: " + e.message;
+  }
+}
+
 async function load() {
   try {
     const [models, endpoints] = await Promise.all([
@@ -66,5 +104,15 @@ async function load() {
   }
 }
 
-window.addEventListener("app:refresh", load);
+$("catalog-search").addEventListener("input", (e) => renderCatalog(e.target.value));
+$("catalog-refresh").addEventListener("click", async () => {
+  toast("Refreshing catalog…");
+  await loadCatalog(true);
+});
+
+window.addEventListener("app:refresh", () => {
+  load();
+  loadCatalog();
+});
 load();
+loadCatalog();

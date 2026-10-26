@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: abusecode-router
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: ABUSECODE_DATA
+        value: /tmp/abusecode
+      - key: ABUSECODE_DB
+        value: /tmp/abusecode/abusecode.db
+      - key: ABUSECODE_SECRET
+        generateValue: true
+      - key: ABUSECODE_ADMIN_TOKEN
+        sync: false
+      - key: ABUSECODE_PROXY_TOKEN
+        sync: false

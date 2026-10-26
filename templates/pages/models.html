@@ -2,7 +2,24 @@
 {% from "partials/icons.html" import icon %}
 
 {% block content %}
-<section class="card overflow-hidden">
+<section class="card p-5">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="eyebrow">Catalog</p>
+      <h2 class="mt-1 text-lg font-semibold text-fg">Available models</h2>
+    </div>
+    <div class="flex items-center gap-2">
+      <input id="catalog-search" type="search" class="input w-full text-[12px] sm:w-56" placeholder="Search models…" />
+      <button id="catalog-refresh" class="btn btn-ghost px-3 py-2 text-xs" title="Refresh from upstream">Refresh</button>
+    </div>
+  </div>
+  <p class="mono mt-2 text-[11px] text-dim" id="catalog-meta">loading catalog…</p>
+  <div id="catalog" class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+    <p class="text-sm text-dim">Loading…</p>
+  </div>
+</section>
+
+<section class="card mt-4 overflow-hidden">
   <div class="flex flex-col gap-2 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
       <p class="eyebrow">Breakdown</p>

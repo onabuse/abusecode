@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+
+{% block content %}
+<section class="grid gap-4 lg:grid-cols-2">
+  <div class="card p-5">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="eyebrow">Request</p>
+        <h2 class="mt-1 text-lg font-semibold text-fg">Send a prompt</h2>
+      </div>
+      <span class="pill pill-idle" id="pg-status">idle</span>
+    </div>
+
+    <form id="pg-form" class="mt-4 space-y-3">
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label for="pg-model" class="mono text-[11px] uppercase tracking-wider text-dim">Model</label>
+          <select id="pg-model" class="select mt-1 w-full text-[12px]">
+            <option value="deepseek-v4.1-flash-free">deepseek-v4.1-flash-free</option>
+          </select>
+        </div>
+        <div>
+          <label for="pg-max" class="mono text-[11px] uppercase tracking-wider text-dim">Max tokens</label>
+          <input id="pg-max" type="number" value="512" min="1" max="8192" class="input mt-1" />
+        </div>
+      </div>
+
+      <div>
+        <label for="pg-input" class="mono text-[11px] uppercase tracking-wider text-dim">Prompt</label>
+        <textarea id="pg-input" rows="7" class="input mt-1 resize-y" placeholder="Say hello in one sentence." required></textarea>
+      </div>
+
+      <label class="flex cursor-pointer items-center gap-2 text-sm text-muted">
+        <input id="pg-stream" type="checkbox" class="h-4 w-4 rounded border-line bg-card accent-[#1e6dd4]" checked />
+        Stream response
+      </label>
+
+      <div class="flex items-center gap-2">
+        <button type="submit" class="btn btn-blue px-4 py-2.5 text-sm">{{ icon("bolt", "h-4 w-4") }} Send</button>
+        <button type="button" id="pg-clear" class="btn btn-ghost px-4 py-2.5 text-sm">Clear</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card flex flex-col p-5">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="eyebrow">Response</p>
+        <h2 class="mt-1 text-lg font-semibold text-fg">Output</h2>
+      </div>
+      <span class="mono text-[11px] text-dim" id="pg-meta">—</span>
+    </div>
+
+    <pre id="pg-output" class="mono mt-4 min-h-[280px] flex-1 overflow-auto whitespace-pre-wrap break-words rounded-ctrl border border-line bg-bg p-3 text-[12px] leading-relaxed text-fg">Response will appear here…</pre>
+  </div>
+</section>
+
+<section class="card mt-4 p-5">
+  <p class="eyebrow">Notes</p>
+  <div class="mt-2 grid gap-2 text-sm text-muted sm:grid-cols-3">
+    <p class="flex gap-2"><span class="text-accent">·</span> Requests go through your saved keys + rotation.</p>
+    <p class="flex gap-2"><span class="text-accent">·</span> Free models may return <span class="mono text-fg">429</span> when quota is exhausted.</p>
+    <p class="flex gap-2"><span class="text-accent">·</span> Streamed output is parsed from SSE deltas.</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/static/js/playground.js"></script>
+{% endblock %}

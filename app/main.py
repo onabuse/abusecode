@@ -4,9 +4,12 @@ import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 
 from . import config, db
-from .routers import keys, pages, proxy, usage
+from .routers import auth, keys, pages, proxy, usage
+from .security import SESSION_SECRET, AuthMiddleware
+from .services import client as client_service
 
 
 @asynccontextmanager
@@ -16,7 +19,7 @@ async def lifespan(app: FastAPI):
         timeout=httpx.Timeout(connect=30.0, read=None, write=60.0, pool=30.0),
         follow_redirects=False,
     )
-    proxy.set_client(client)
+    client_service.set_client(client)
     try:
         yield
     finally:
@@ -35,9 +38,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Added before SessionMiddleware so the session is available inside AuthMiddleware.
+app.add_middleware(AuthMiddleware)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET,
+    max_age=config.SESSION_MAX_AGE,
+    same_site="lax",
+    https_only=False,
+)
 
 app.mount("/static", StaticFiles(directory=config.STATIC_DIR), name="static")
 
+app.include_router(auth.router)
 app.include_router(pages.router)
 app.include_router(keys.router)
 app.include_router(usage.router)

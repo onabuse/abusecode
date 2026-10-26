@@ -32,7 +32,12 @@
         <p class="eyebrow">Traffic · 24h</p>
         <h2 class="mt-1 text-lg font-semibold text-fg">Requests per hour</h2>
       </div>
-      <div class="flex items-center gap-4 text-xs text-dim">
+      <div class="flex items-center gap-3 text-xs text-dim">
+        <select id="range" class="select mono py-1 text-[11px]">
+          <option value="24">24h</option>
+          <option value="72">3d</option>
+          <option value="168">7d</option>
+        </select>
         <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent"></span>ok</span>
         <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-danger"></span>error</span>
       </div>

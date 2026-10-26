@@ -1,0 +1,14 @@
+services:
+  router:
+    build: .
+    image: abusecode-router:latest
+    ports:
+      - "8000:8000"
+    environment:
+      ABUSECODE_DB: /app/data/abusecode.db
+      ABUSECODE_ADMIN_TOKEN: ${ABUSECODE_ADMIN_TOKEN:-}
+      ABUSECODE_PROXY_TOKEN: ${ABUSECODE_PROXY_TOKEN:-}
+      ABUSECODE_SECRET: ${ABUSECODE_SECRET:-}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

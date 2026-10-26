@@ -124,20 +124,30 @@ function drawChart(series) {
   const every = Math.ceil(n / 6);
   series.forEach((p, i) => {
     if (i % every !== 0) return;
-    const hh = (p.t || "").slice(11, 13) || "";
-    ctx.fillText(hh + "h", i * (bw + gap), h - padB + 5);
+    const d = new Date(p.t);
+    const label = hours <= 24
+      ? String(d.getHours()).padStart(2, "0") + "h"
+      : d.getMonth() + 1 + "/" + d.getDate();
+    ctx.fillText(label, i * (bw + gap), h - padB + 5);
   });
 }
 
+let hours = 24;
+
 async function load() {
   try {
-    renderStats(await api("/api/stats?hours=24"));
+    renderStats(await api(`/api/stats?hours=${hours}`));
   } catch (e) {
     console.error(e);
   }
 }
 
+$("range")?.addEventListener("change", (e) => {
+  hours = Number(e.target.value) || 24;
+  load();
+});
+
 window.addEventListener("app:refresh", load);
-window.addEventListener("resize", () => api("/api/stats?hours=24").then(renderStats).catch(() => {}));
+window.addEventListener("resize", () => load());
 load();
 setInterval(load, 5000);

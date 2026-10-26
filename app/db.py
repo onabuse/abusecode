@@ -1,13 +1,13 @@
 import os
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from . import config
 
 
 def now():
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 @contextmanager
@@ -56,6 +56,16 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_usage_ts ON usage(ts);
             """
         )
+        existing = {row[1] for row in c.execute("PRAGMA table_info(keys)")}
+        for name, ddl in (
+            ("success_count", "INTEGER NOT NULL DEFAULT 0"),
+            ("fail_count", "INTEGER NOT NULL DEFAULT 0"),
+            ("last_status", "INTEGER"),
+            ("last_error", "TEXT"),
+            ("cooldown_until", "TEXT"),
+        ):
+            if name not in existing:
+                c.execute(f"ALTER TABLE keys ADD COLUMN {name} {ddl}")
 
 
 def mask(api_key):
@@ -80,22 +90,37 @@ def add_key(name, api_key):
 def list_keys():
     with conn() as c:
         rows = c.execute("SELECT * FROM keys ORDER BY id DESC").fetchall()
-    return [
-        {
-            "id": r["id"],
-            "name": r["name"],
-            "masked": mask(r["api_key"]),
-            "active": bool(r["active"]),
-            "created_at": r["created_at"],
-            "last_used_at": r["last_used_at"],
-        }
-        for r in rows
-    ]
+    out = []
+    for r in rows:
+        cooling = bool(r["cooldown_until"] and r["cooldown_until"] > now())
+        out.append(
+            {
+                "id": r["id"],
+                "name": r["name"],
+                "masked": mask(r["api_key"]),
+                "active": bool(r["active"]),
+                "created_at": r["created_at"],
+                "last_used_at": r["last_used_at"],
+                "success_count": r["success_count"] or 0,
+                "fail_count": r["fail_count"] or 0,
+                "last_status": r["last_status"],
+                "last_error": r["last_error"],
+                "cooldown_until": r["cooldown_until"],
+                "cooling": cooling,
+            }
+        )
+    return out
 
 
 def set_key_active(key_id, active):
     with conn() as c:
-        c.execute("UPDATE keys SET active=? WHERE id=?", (1 if active else 0, key_id))
+        if active:
+            c.execute(
+                "UPDATE keys SET active=1, cooldown_until=NULL, fail_count=0 WHERE id=?",
+                (key_id,),
+            )
+        else:
+            c.execute("UPDATE keys SET active=0 WHERE id=?", (key_id,))
 
 
 def delete_key(key_id):
@@ -103,19 +128,61 @@ def delete_key(key_id):
         c.execute("DELETE FROM keys WHERE id=?", (key_id,))
 
 
-def active_keys():
-    """Least-recently-used first, for simple rotation + failover."""
+def active_keys(include_cooling=False):
+    """Least-recently-used first, skipping keys that are cooling down."""
+    query = "SELECT id, name, api_key FROM keys WHERE active=1"
+    params = []
+    if not include_cooling:
+        query += " AND (cooldown_until IS NULL OR cooldown_until <= ?)"
+        params.append(now())
+    query += " ORDER BY COALESCE(last_used_at,'') ASC, id ASC"
     with conn() as c:
-        rows = c.execute(
-            "SELECT id, name, api_key FROM keys "
-            "WHERE active=1 ORDER BY COALESCE(last_used_at,'') ASC, id ASC"
-        ).fetchall()
+        rows = c.execute(query, params).fetchall()
     return [dict(r) for r in rows]
 
 
 def touch_key(key_id):
     with conn() as c:
         c.execute("UPDATE keys SET last_used_at=? WHERE id=?", (now(), key_id))
+
+
+def mark_key_success(key_id, status):
+    with conn() as c:
+        c.execute(
+            "UPDATE keys SET success_count=success_count+1, fail_count=0, "
+            "last_status=?, last_error=NULL, cooldown_until=NULL, last_used_at=? "
+            "WHERE id=?",
+            (status, now(), key_id),
+        )
+
+
+def mark_key_failure(key_id, status, error, cooldown_seconds):
+    until = (
+        datetime.now(UTC) + timedelta(seconds=max(0, cooldown_seconds))
+    ).isoformat()
+    with conn() as c:
+        c.execute(
+            "UPDATE keys SET fail_count=fail_count+1, last_status=?, last_error=?, "
+            "cooldown_until=? WHERE id=?",
+            (status, (error or "")[:500], until, key_id),
+        )
+
+
+def cooldown_remaining():
+    """Seconds until the soonest cooling key is available again (0 if none)."""
+    with conn() as c:
+        row = c.execute(
+            "SELECT cooldown_until FROM keys WHERE active=1 AND cooldown_until > ? "
+            "ORDER BY cooldown_until ASC LIMIT 1",
+            (now(),),
+        ).fetchone()
+    if not row:
+        return 0
+    try:
+        until = datetime.fromisoformat(row["cooldown_until"])
+        return max(0, int((until - datetime.now(UTC)).total_seconds()))
+    except Exception:
+        return 0
 
 
 # ---------------- usage ----------------
@@ -184,7 +251,7 @@ def stats(hours=24):
         ).fetchall()
         recent = c.execute("SELECT * FROM usage ORDER BY id DESC LIMIT 40").fetchall()
 
-        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours - 1)).replace(
+        cutoff = (datetime.now(UTC) - timedelta(hours=hours - 1)).replace(
             minute=0, second=0, microsecond=0
         )
         rows = c.execute(

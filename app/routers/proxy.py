@@ -1,19 +1,14 @@
 import time
+import uuid
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from .. import config, db
+from ..services import client as client_service
 from ..services import upstream
 
 router = APIRouter(tags=["proxy"])
-
-_client = None
-
-
-def set_client(client):
-    global _client
-    _client = client
 
 
 @router.api_route(
@@ -22,6 +17,7 @@ def set_client(client):
 )
 async def proxy(path: str, request: Request):
     started = time.perf_counter()
+    request_id = "req_" + uuid.uuid4().hex[:16]
     body = await request.body()
     req_model = upstream.request_model(body)
     stream = upstream.wants_stream(request, body)
@@ -30,6 +26,19 @@ async def proxy(path: str, request: Request):
 
     keys = db.active_keys()
     if not keys:
+        cooling = db.active_keys(include_cooling=True)
+        if cooling:
+            wait = db.cooldown_remaining()
+            return JSONResponse(
+                {
+                    "error": {
+                        "type": "all_keys_cooling",
+                        "message": "All active keys are cooling down after upstream errors.",
+                    }
+                },
+                status_code=429,
+                headers={"Retry-After": str(wait), "x-abuse-request-id": request_id},
+            )
         return JSONResponse(
             {
                 "error": {
@@ -38,21 +47,25 @@ async def proxy(path: str, request: Request):
                 }
             },
             status_code=503,
+            headers={"x-abuse-request-id": request_id},
         )
 
     resp, used, failures = await upstream.send_with_failover(
-        _client, request.method, url, request, body, keys
+        client_service.get_client(), request.method, url, request, body, keys
     )
 
     elapsed = int((time.perf_counter() - started) * 1000)
     for failure in failures:
+        status = failure.get("status", 0)
+        cooldown = upstream.cooldown_for(status, failure.get("retry_after"))
+        db.mark_key_failure(failure["key"]["id"], status, failure["error"], cooldown)
         db.log_usage(
             key_id=failure["key"]["id"],
             key_name=failure["key"]["name"],
             model=req_model,
             endpoint=endpoint,
             method=request.method,
-            status=0,
+            status=status,
             latency_ms=elapsed,
             stream=stream,
             error=failure["error"],
@@ -67,12 +80,24 @@ async def proxy(path: str, request: Request):
                 }
             },
             status_code=502,
+            headers={"x-abuse-request-id": request_id},
         )
 
-    if used:
+    # The final key may itself have returned a failover status.
+    final_failed = resp.status_code in config.FAILOVER_STATUS
+    if used and final_failed:
+        db.mark_key_failure(
+            used["id"],
+            resp.status_code,
+            f"HTTP {resp.status_code}",
+            upstream.cooldown_for(resp.status_code, resp.headers.get("retry-after")),
+        )
+    elif used:
         db.touch_key(used["id"])
 
     media_type = resp.headers.get("content-type", "application/json")
+    out_headers = upstream.response_headers(resp)
+    out_headers["x-abuse-request-id"] = request_id
 
     async def relay():
         raw = bytearray()
@@ -91,6 +116,8 @@ async def proxy(path: str, request: Request):
                 error = None
                 if resp.status_code >= 400:
                     error = bytes(raw[:800]).decode("utf-8", "replace")
+                if used and not final_failed and resp.status_code < 400:
+                    db.mark_key_success(used["id"], resp.status_code)
                 db.log_usage(
                     key_id=used["id"] if used else None,
                     key_name=used["name"] if used else None,
@@ -111,6 +138,6 @@ async def proxy(path: str, request: Request):
     return StreamingResponse(
         relay(),
         status_code=resp.status_code,
-        headers=upstream.response_headers(resp),
+        headers=out_headers,
         media_type=media_type,
     )

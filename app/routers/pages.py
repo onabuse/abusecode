@@ -2,12 +2,14 @@ from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
 from .. import config
+from ..security import auth_enabled
 
 router = APIRouter(tags=["pages"])
 templates = Jinja2Templates(directory=config.TEMPLATES_DIR)
 
 NAV = [
     {"id": "overview", "label": "Overview", "href": "/", "icon": "grid"},
+    {"id": "playground", "label": "Playground", "href": "/playground", "icon": "bolt"},
     {"id": "keys", "label": "API Keys", "href": "/keys", "icon": "key"},
     {"id": "models", "label": "Models", "href": "/models", "icon": "layers"},
     {"id": "logs", "label": "Logs", "href": "/logs", "icon": "list"},
@@ -23,9 +25,13 @@ PAGES = {
         "title": "API Keys",
         "subtitle": "Add keys, control rotation and monitor usage per key.",
     },
+    "playground": {
+        "title": "Playground",
+        "subtitle": "Send a live request through the proxy.",
+    },
     "models": {
         "title": "Models",
-        "subtitle": "Which models your traffic is hitting.",
+        "subtitle": "Catalog and usage by model.",
     },
     "logs": {
         "title": "Request Logs",
@@ -49,6 +55,7 @@ def render(request: Request, page_id: str, template: str):
             "nav": NAV,
             "active": page_id,
             "page": PAGES[page_id],
+            "auth_enabled": auth_enabled(),
         },
     )
 
@@ -56,6 +63,11 @@ def render(request: Request, page_id: str, template: str):
 @router.get("/")
 async def overview(request: Request):
     return render(request, "overview", "pages/overview.html")
+
+
+@router.get("/playground")
+async def playground_page(request: Request):
+    return render(request, "playground", "pages/playground.html")
 
 
 @router.get("/keys")

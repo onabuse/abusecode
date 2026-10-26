@@ -53,6 +53,9 @@
         </div>
         <p class="mono mt-1 truncate text-[11px] text-muted" title="{{ upstream }}">{{ upstream }}</p>
       </div>
+      {% if auth_enabled %}
+      <button id="logout" class="btn btn-ghost mt-3 w-full px-3 py-1.5 text-[11px]">Sign out</button>
+      {% endif %}
       <p class="mono mt-3 text-center text-[10px] text-dim">v{{ version }} · local proxy</p>
     </div>
   </aside>

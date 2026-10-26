@@ -8,3 +8,7 @@ class KeyIn(BaseModel):
 
 class KeyPatch(BaseModel):
     active: bool
+
+
+class LoginIn(BaseModel):
+    token: str = ""

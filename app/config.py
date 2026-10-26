@@ -17,5 +17,13 @@ USER_AGENT = os.environ.get(
 )
 DEFAULT_SESSION = os.environ.get("OPENCODE_SESSION", "")
 
+# Dashboard auth (optional). Empty = dashboard is open.
+ADMIN_TOKEN = os.environ.get("ABUSECODE_ADMIN_TOKEN", "")
+# Proxy auth (optional). When set, clients must send it in Authorization/x-proxy-token.
+PROXY_TOKEN = os.environ.get("ABUSECODE_PROXY_TOKEN", "")
+# Signs the session cookie. Generated per-process if unset.
+SESSION_SECRET = os.environ.get("ABUSECODE_SECRET", "")
+SESSION_MAX_AGE = int(os.environ.get("ABUSECODE_SESSION_MAX_AGE", str(60 * 60 * 12)))
+
 FAILOVER_STATUS = {401, 403, 429, 500, 502, 503, 504}
 MAX_CAPTURE_BYTES = 4_000_000

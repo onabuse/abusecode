@@ -18,6 +18,13 @@ $("global-refresh")?.addEventListener("click", () => {
   window.dispatchEvent(new CustomEvent("app:refresh"));
 });
 
+$("logout")?.addEventListener("click", async () => {
+  try {
+    await api("/api/logout", { method: "POST" });
+  } catch {}
+  location.href = "/login";
+});
+
 $("base-origin")?.textContent = location.origin + "/v1";
 
 async function pollHealth() {

@@ -7,3 +7,6 @@ data/
 *.db-shm
 .env
 node_modules/
+*.log
+autosync.pid
+.autosync*

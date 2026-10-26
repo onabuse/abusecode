@@ -1,0 +1,58 @@
+{% from "partials/icons.html" import icon %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#171717" />
+  <title>Sign in · {{ app_name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/app.css" />
+</head>
+<body class="hero-bg flex min-h-screen items-center justify-center px-4">
+  <div class="w-full max-w-sm">
+    <div class="mb-6 flex items-center justify-center gap-2.5">
+      <span class="glow text-accent">{{ icon("route", "h-6 w-6") }}</span>
+      <span class="mono text-lg tracking-tight text-white">{{ app_name }}</span>
+    </div>
+
+    <div class="card p-6">
+      <p class="eyebrow">Restricted</p>
+      <h1 class="grad-heading mt-2 text-2xl font-bold tracking-tight">Sign in</h1>
+      <p class="mt-1 text-sm text-muted">Enter your admin token to open the dashboard.</p>
+
+      <form id="login-form" class="mt-5 space-y-3">
+        <div>
+          <label for="token" class="mono text-[11px] uppercase tracking-wider text-dim">Admin token</label>
+          <input id="token" type="password" class="input mt-1" placeholder="••••••••" autocomplete="current-password" required autofocus />
+        </div>
+        <p id="login-error" class="hidden text-[12px] text-[#f0a0a0]"></p>
+        <button type="submit" class="btn btn-blue w-full px-4 py-2.5 text-sm">Continue</button>
+      </form>
+    </div>
+
+    <p class="mono mt-4 text-center text-[10px] text-dim">v{{ version }} · local proxy</p>
+  </div>
+
+  <script type="module">
+    import { $, api, toast } from "/static/js/lib.js";
+    $("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const err = $("login-error");
+      err.classList.add("hidden");
+      try {
+        await api("/api/login", {
+          method: "POST",
+          body: JSON.stringify({ token: $("token").value }),
+        });
+        location.href = "/";
+      } catch (ex) {
+        err.textContent = ex.message || "Invalid token";
+        err.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>

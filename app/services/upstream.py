@@ -8,7 +8,6 @@ import httpx
 
 from .. import config
 
-
 # ---------------- usage parsing ----------------
 
 def usage_from_obj(obj):
@@ -131,16 +130,46 @@ def response_headers(resp: httpx.Response):
     return {h: resp.headers[h] for h in PASSTHROUGH_RESPONSE_HEADERS if h in resp.headers}
 
 
+def auth_headers(api_key, session=None):
+    """Headers for simple upstream calls that have no incoming Request."""
+    session = session or config.DEFAULT_SESSION or "ses_" + uuid.uuid4().hex
+    return {
+        "Authorization": f"Bearer {api_key}",
+        "Accept": "application/json",
+        "x-opencode-client": "cli",
+        "x-opencode-project": "global",
+        "x-opencode-request": "msg_" + uuid.uuid4().hex[:16],
+        "x-opencode-session": session,
+        "x-opencode-session-id": session,
+        "User-Agent": config.USER_AGENT,
+    }
+
+
+def cooldown_for(status, retry_after=None):
+    """Cooldown seconds for a failed key, honoring upstream Retry-After."""
+    if retry_after:
+        try:
+            return max(1, min(int(float(retry_after)), 3600))
+        except Exception:
+            pass
+    if status == 429:
+        return 60
+    if status in (401, 403):
+        return 300
+    if status >= 500:
+        return 30
+    return 15
+
+
 # ---------------- failover ----------------
 
-async def send_with_failover(client, method, url, request, body, keys, ):
+async def send_with_failover(client, method, url, request, body, keys):
     """Try each key (LRU order) until a non-failover response is returned.
 
-    Returns (response|None, used_key|None, failures) where failures is a list of
-    {"key", "error"} for each rejected attempt.
+    Returns (response|None, used_key|None, failures). Each failure is
+    {"key", "status", "error", "retry_after"}.
     """
     failures = []
-    last_error = None
     for i, key in enumerate(keys):
         try:
             req = client.build_request(
@@ -148,12 +177,20 @@ async def send_with_failover(client, method, url, request, body, keys, ):
             )
             resp = await client.send(req, stream=True)
         except httpx.RequestError as exc:
-            last_error = str(exc)
-            failures.append({"key": key, "error": last_error})
+            failures.append(
+                {"key": key, "status": 0, "error": str(exc), "retry_after": None}
+            )
             continue
 
         if resp.status_code in config.FAILOVER_STATUS and i < len(keys) - 1:
-            failures.append({"key": key, "error": f"HTTP {resp.status_code}"})
+            failures.append(
+                {
+                    "key": key,
+                    "status": resp.status_code,
+                    "error": f"HTTP {resp.status_code}",
+                    "retry_after": resp.headers.get("retry-after"),
+                }
+            )
             await resp.aclose()
             continue
 

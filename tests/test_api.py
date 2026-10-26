@@ -50,3 +50,19 @@ def test_stats_and_logs(client):
     body = client.get("/api/logs?limit=5").json()
     assert body["total"] == 0
     assert client.get("/api/logs/export?format=csv").status_code == 200
+
+
+def test_dashboard_auth(tmp_db, monkeypatch):
+    from app import config
+
+    monkeypatch.setattr(config, "ADMIN_TOKEN", "sekret")
+    with TestClient(app) as c:
+        page = c.get("/", follow_redirects=False)
+        assert page.status_code == 303
+        assert page.headers["location"] == "/login"
+        assert c.get("/api/keys").status_code == 401
+
+        assert c.post("/api/login", json={"token": "wrong"}).status_code == 401
+        assert c.post("/api/login", json={"token": "sekret"}).status_code == 200
+        assert c.get("/api/keys").status_code == 200
+        assert c.get("/", follow_redirects=False).status_code == 200

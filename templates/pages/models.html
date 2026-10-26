@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+
+{% block content %}
+<section class="card overflow-hidden">
+  <div class="flex flex-col gap-2 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="eyebrow">Breakdown</p>
+      <h2 class="mt-1 text-lg font-semibold text-fg">Models in use</h2>
+    </div>
+    <span class="mono text-xs text-dim" id="model-summary">—</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="table-head">
+          <th class="px-4 py-3 font-normal sm:px-5">Model</th>
+          <th class="hidden w-40 px-3 py-3 font-normal sm:table-cell">Share</th>
+          <th class="px-3 py-3 text-right font-normal">Requests</th>
+          <th class="hidden px-3 py-3 text-right font-normal lg:table-cell">Input</th>
+          <th class="hidden px-3 py-3 text-right font-normal lg:table-cell">Output</th>
+          <th class="px-3 py-3 text-right font-normal">Total</th>
+          <th class="hidden px-3 py-3 text-right font-normal md:table-cell">Avg</th>
+          <th class="hidden px-5 py-3 text-right font-normal md:table-cell">Errors</th>
+        </tr>
+      </thead>
+      <tbody id="models-body" class="mono text-[12px]">
+        <tr><td colspan="8" class="px-5 py-6 text-dim">No traffic yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="mt-4 grid gap-4 lg:grid-cols-2">
+  <div class="card p-5">
+    <p class="eyebrow">Endpoints</p>
+    <h2 class="mt-1 text-lg font-semibold text-fg">Calls by endpoint</h2>
+    <div id="endpoints" class="mt-4 space-y-3">
+      <p class="text-sm text-dim">No traffic yet.</p>
+    </div>
+  </div>
+
+  <div class="card p-5">
+    <p class="eyebrow">Notes</p>
+    <h2 class="mt-1 text-lg font-semibold text-fg">Reading this data</h2>
+    <ul class="mt-3 space-y-2 text-sm leading-relaxed text-muted">
+      <li class="flex gap-2"><span class="text-accent">·</span> Tokens come from upstream usage objects (JSON or SSE).</li>
+      <li class="flex gap-2"><span class="text-accent">·</span> A request is successful when status is <span class="mono text-fg">2xx/3xx</span>.</li>
+      <li class="flex gap-2"><span class="text-accent">·</span> Failed keys are logged separately and then retried.</li>
+      <li class="flex gap-2"><span class="text-accent">·</span> Streamed responses log usage when the stream closes.</li>
+    </ul>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/static/js/models.js"></script>
+{% endblock %}

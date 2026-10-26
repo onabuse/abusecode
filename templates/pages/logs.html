@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+
+{% block content %}
+<section class="card overflow-hidden">
+  <div class="flex flex-col gap-3 border-b border-line px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+    <div>
+      <p class="eyebrow">History</p>
+      <h2 class="mt-1 text-lg font-semibold text-fg">All requests</h2>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <label class="sr-only" for="filter-model">Model</label>
+      <select id="filter-model" class="select mono text-[12px]">
+        <option value="">all models</option>
+      </select>
+      <label class="sr-only" for="filter-status">Status</label>
+      <select id="filter-status" class="select mono text-[12px]">
+        <option value="">all status</option>
+        <option value="ok">success</option>
+        <option value="error">errors</option>
+      </select>
+      <label class="sr-only" for="filter-limit">Page size</label>
+      <select id="filter-limit" class="select mono text-[12px]">
+        <option value="25">25 / page</option>
+        <option value="50" selected>50 / page</option>
+        <option value="100">100 / page</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="table-head">
+          <th class="px-4 py-3 font-normal sm:px-5">Time</th>
+          <th class="hidden px-3 py-3 font-normal md:table-cell">Endpoint</th>
+          <th class="px-3 py-3 font-normal">Model</th>
+          <th class="px-3 py-3 font-normal">Status</th>
+          <th class="hidden px-3 py-3 text-right font-normal lg:table-cell">In</th>
+          <th class="hidden px-3 py-3 text-right font-normal lg:table-cell">Out</th>
+          <th class="px-3 py-3 text-right font-normal">Total</th>
+          <th class="hidden px-3 py-3 text-right font-normal sm:table-cell">Latency</th>
+          <th class="hidden px-3 py-3 font-normal md:table-cell">Key</th>
+          <th class="hidden px-5 py-3 font-normal xl:table-cell">Error</th>
+        </tr>
+      </thead>
+      <tbody id="logs" class="mono text-[12px]">
+        <tr><td colspan="10" class="px-5 py-6 text-dim">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex flex-col items-center justify-between gap-3 border-t border-line px-5 py-3 text-xs text-dim sm:flex-row">
+    <span class="mono" id="log-range">—</span>
+    <div class="flex items-center gap-2">
+      <button id="prev" class="btn btn-ghost px-3 py-1.5">Prev</button>
+      <button id="next" class="btn btn-ghost px-3 py-1.5">Next</button>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/static/js/logs.js"></script>
+{% endblock %}

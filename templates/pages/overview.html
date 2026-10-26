@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+
+{% block content %}
+<section class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+  <div class="card p-5">
+    <p class="eyebrow">Requests</p>
+    <p class="mono mt-2 text-3xl font-semibold text-fg" id="stat-requests">0</p>
+    <p class="mt-1 text-xs text-dim">all time</p>
+  </div>
+  <div class="card p-5">
+    <p class="eyebrow">Tokens</p>
+    <p class="mono mt-2 text-3xl font-semibold text-fg" id="stat-tokens">0</p>
+    <p class="mt-1 text-xs text-dim">in + out</p>
+  </div>
+  <div class="card p-5">
+    <p class="eyebrow">Success</p>
+    <p class="mono mt-2 text-3xl font-semibold text-fg" id="stat-rate">100%</p>
+    <p class="mt-1 text-xs text-dim" id="stat-latency">avg 0 ms</p>
+  </div>
+  <div class="card p-5">
+    <p class="eyebrow">Active keys</p>
+    <p class="mono mt-2 text-3xl font-semibold text-accent" id="stat-keys">0</p>
+    <p class="mt-1 text-xs text-dim">rotation ready</p>
+  </div>
+</section>
+
+<section class="mt-4 grid gap-4 lg:grid-cols-3">
+  <div class="card p-5 lg:col-span-2">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="eyebrow">Traffic · 24h</p>
+        <h2 class="mt-1 text-lg font-semibold text-fg">Requests per hour</h2>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-dim">
+        <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-accent"></span>ok</span>
+        <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-danger"></span>error</span>
+      </div>
+    </div>
+    <canvas id="chart" class="mt-4 h-48 w-full" height="192"></canvas>
+  </div>
+
+  <div class="card p-5">
+    <p class="eyebrow">Models</p>
+    <h2 class="mt-1 text-lg font-semibold text-fg">Usage by model</h2>
+    <div id="models" class="mt-3 space-y-2.5 text-sm">
+      <p class="text-dim">No traffic yet.</p>
+    </div>
+  </div>
+</section>
+
+<section class="mt-4 grid gap-4 lg:grid-cols-3">
+  <div class="card overflow-hidden lg:col-span-2">
+    <div class="flex items-center justify-between border-b border-line px-5 py-4">
+      <div>
+        <p class="eyebrow">Log</p>
+        <h2 class="mt-1 text-lg font-semibold text-fg">Recent requests</h2>
+      </div>
+      <a href="/logs" class="btn btn-ghost px-3 py-1.5 text-xs">View all {{ icon("external", "h-3.5 w-3.5") }}</a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="table-head">
+            <th class="px-4 py-3 font-normal sm:px-5">Time</th>
+            <th class="hidden px-3 py-3 font-normal md:table-cell">Endpoint</th>
+            <th class="px-3 py-3 font-normal">Model</th>
+            <th class="px-3 py-3 font-normal">Status</th>
+            <th class="px-3 py-3 text-right font-normal">Tokens</th>
+            <th class="hidden px-5 py-3 text-right font-normal sm:table-cell">Latency</th>
+          </tr>
+        </thead>
+        <tbody id="recent" class="mono text-[12px]">
+          <tr><td colspan="6" class="px-5 py-6 text-dim">No requests yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card p-5">
+    <p class="eyebrow">Quickstart</p>
+    <h2 class="mt-1 text-lg font-semibold text-fg">Use the proxy</h2>
+    <p class="mt-1 text-sm text-muted">Point any OpenCode-compatible client at:</p>
+    <div class="mt-3 flex items-center gap-2 rounded-ctrl border border-line bg-bg px-3 py-2">
+      <span class="mono min-w-0 flex-1 truncate text-[12px] text-fg" id="base-url">/v1</span>
+      <button id="copy-base" class="btn btn-ghost p-1.5" aria-label="Copy base URL">{{ icon("copy", "h-3.5 w-3.5") }}</button>
+    </div>
+    <pre class="mono mt-3 overflow-x-auto rounded-ctrl border border-line bg-bg p-3 text-[11px] leading-relaxed text-muted"><code>curl $BASE/responses \
+  -H "Content-Type: application/json" \
+  -d '{"model":"deepseek-v4.1-flash-free",
+       "input":"hello",
+       "stream":false}'</code></pre>
+    <p class="mt-3 text-[11px] text-dim">Auth headers are injected from your saved keys.</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/static/js/overview.js"></script>
+{% endblock %}

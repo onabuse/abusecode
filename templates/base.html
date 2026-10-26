@@ -1,0 +1,97 @@
+{% from "partials/icons.html" import icon %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="{{ app_name }} — OpenCode-compatible proxy and usage dashboard." />
+  <meta name="theme-color" content="#171717" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>{% block title %}{{ page.title }} · {{ app_name }}{% endblock %}</title>
+  <link rel="manifest" href="/static/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/static/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/app.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='1.7' stroke-linecap='round'%3E%3Cpath d='M4 12h5l2-5 3 10 2-5h4'/%3E%3C/svg%3E" />
+</head>
+<body class="min-h-screen">
+  <div id="backdrop" class="fixed inset-0 z-30 hidden bg-black/60 backdrop-blur-sm lg:hidden"></div>
+
+  <aside id="sidebar"
+    class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col border-r border-line bg-ink transition-transform duration-200 lg:translate-x-0">
+    <div class="flex items-center justify-between gap-2.5 border-b border-line px-5 py-4">
+      <div class="flex items-center gap-2.5">
+        <span class="glow text-accent">{{ icon("route", "h-5 w-5") }}</span>
+        <span class="mono text-[15px] tracking-tight text-white">{{ app_name }}</span>
+      </div>
+      <button id="sidebar-close" class="btn btn-ghost p-1.5 lg:hidden" aria-label="Close menu">
+        {{ icon("close", "h-4 w-4") }}
+      </button>
+    </div>
+
+    <nav class="flex-1 space-y-1 px-3 py-4">
+      <p class="mono px-3 pb-2 text-[10px] uppercase tracking-[0.2em] text-dim">Workspace</p>
+      {% for item in nav %}
+      <a href="{{ item.href }}"
+         class="nav-link {{ 'nav-link-active' if active == item.id else '' }}">
+        {{ icon(item.icon, "h-4 w-4") }}
+        <span>{{ item.label }}</span>
+      </a>
+      {% endfor %}
+    </nav>
+
+    <div class="border-t border-line p-4">
+      <div class="tile px-3 py-2.5">
+        <div class="flex items-center justify-between">
+          <span class="mono text-[11px] uppercase tracking-wider text-dim">Upstream</span>
+          <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+        </div>
+        <p class="mono mt-1 truncate text-[11px] text-muted" title="{{ upstream }}">{{ upstream }}</p>
+      </div>
+      <p class="mono mt-3 text-center text-[10px] text-dim">v{{ version }} · local proxy</p>
+    </div>
+  </aside>
+
+  <div class="lg:pl-64">
+    <header class="sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur">
+      <div class="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <button id="menu-toggle" class="btn btn-ghost p-2 lg:hidden" aria-label="Open menu">
+            {{ icon("menu", "h-4 w-4") }}
+          </button>
+          <div class="min-w-0">
+            <h1 class="truncate text-base font-semibold text-fg">{{ page.title }}</h1>
+            <p class="truncate text-xs text-dim">{{ page.subtitle }}</p>
+          </div>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+          <span id="health" class="mono hidden text-xs text-dim sm:inline">connecting…</span>
+          <span id="health-dot" class="h-2 w-2 rounded-full bg-accent"></span>
+          <button id="global-refresh" class="btn btn-ghost px-3 py-1.5 text-xs">
+            {{ icon("refresh", "h-3.5 w-3.5") }}<span class="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+      {% block content %}{% endblock %}
+      <footer class="mt-10 flex flex-col items-center justify-between gap-2 border-t border-line pt-4 text-xs text-dim sm:flex-row">
+        <p class="mono">{{ app_name }} · {{ version }}</p>
+        <p class="mono">proxy base <span class="text-accent-soft" id="base-origin">/v1</span></p>
+      </footer>
+    </main>
+  </div>
+
+  <div id="toast"
+    class="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-ctrl border border-accent-line bg-accent-bg px-4 py-2 text-sm text-fg opacity-0 transition-opacity duration-200"></div>
+
+  <script type="module" src="/static/js/app.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

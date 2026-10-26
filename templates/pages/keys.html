@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon %}
+
+{% block content %}
+<section class="grid gap-4 lg:grid-cols-5">
+  <div class="card p-5 lg:col-span-2">
+    <div class="flex items-center gap-2">
+      <span class="text-accent">{{ icon("key", "h-4 w-4") }}</span>
+      <p class="eyebrow">New key</p>
+    </div>
+    <h2 class="mt-2 text-lg font-semibold text-fg">Add an API key</h2>
+    <p class="mt-1 text-sm text-muted">Keys are stored in local SQLite and masked everywhere in the UI.</p>
+
+    <form id="add-key" class="mt-4 space-y-3">
+      <div>
+        <label for="key-name" class="mono text-[11px] uppercase tracking-wider text-dim">Name</label>
+        <input id="key-name" class="input mt-1" placeholder="primary" autocomplete="off" />
+      </div>
+      <div>
+        <label for="key-value" class="mono text-[11px] uppercase tracking-wider text-dim">API key</label>
+        <input id="key-value" type="password" class="input mt-1" placeholder="oc_sk_..." autocomplete="off" required />
+      </div>
+      <button type="submit" class="btn btn-blue w-full px-4 py-2.5 text-sm">
+        {{ icon("plus", "h-4 w-4") }} Save key
+      </button>
+    </form>
+
+    <div class="mt-4 rounded-ctrl border border-line bg-bg p-3">
+      <div class="flex items-start gap-2">
+        <span class="mt-0.5 text-accent-soft">{{ icon("bolt", "h-4 w-4") }}</span>
+        <p class="text-[12px] leading-relaxed text-dim">
+          Requests use the least-recently-used key first and automatically fail over
+          to the next key on <span class="mono text-muted">401/403/429/5xx</span>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-5 lg:col-span-3">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="eyebrow">Rotation</p>
+        <h2 class="mt-1 text-lg font-semibold text-fg">Saved keys</h2>
+      </div>
+      <span class="pill pill-idle" id="key-count">0 keys</span>
+    </div>
+    <div id="keys" class="mt-4 max-h-[420px] space-y-2 overflow-y-auto pr-1">
+      <p class="text-sm text-dim">No keys yet.</p>
+    </div>
+  </div>
+</section>
+
+<section class="card mt-4 overflow-hidden">
+  <div class="border-b border-line px-5 py-4">
+    <p class="eyebrow">Metering</p>
+    <h2 class="mt-1 text-lg font-semibold text-fg">Usage by key</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[560px] text-left text-sm">
+      <thead>
+        <tr class="table-head">
+          <th class="px-5 py-3 font-normal">Key</th>
+          <th class="px-3 py-3 text-right font-normal">Requests</th>
+          <th class="px-3 py-3 text-right font-normal">Tokens</th>
+          <th class="px-5 py-3 text-right font-normal">Errors</th>
+        </tr>
+      </thead>
+      <tbody id="key-usage" class="mono text-[12px]">
+        <tr><td colspan="4" class="px-5 py-6 text-dim">No usage yet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/static/js/keys.js"></script>
+{% endblock %}

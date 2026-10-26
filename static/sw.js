@@ -1,4 +1,4 @@
-const CACHE = "abusecode-v1";
+const CACHE = "abusecode-v2";
 const SHELL = ["/", "/keys", "/models", "/logs", "/settings", "/static/css/app.css"];
 
 self.addEventListener("install", (event) => {

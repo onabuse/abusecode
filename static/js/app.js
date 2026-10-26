@@ -2,10 +2,14 @@ import { $, api } from "./lib.js";
 
 const sidebar = $("sidebar");
 const backdrop = $("backdrop");
+const menuButton = $("menu-toggle");
 
 function setSidebar(open) {
+  if (!sidebar || !backdrop) return;
   sidebar.classList.toggle("-translate-x-full", !open);
   backdrop.classList.toggle("hidden", !open);
+  menuButton?.setAttribute("aria-expanded", String(open));
+  document.body.classList.toggle("overflow-hidden", open);
 }
 
 $("menu-toggle")?.addEventListener("click", () => setSidebar(true));

@@ -34,6 +34,7 @@ async def health():
         "active_keys": sum(1 for k in keys if k["active"] and not k["cooling"]),
         "cooling_keys": cooling,
         "total_keys": len(keys),
+        "dashboard_auth": bool(config.ADMIN_TOKEN),
         "proxy_token": bool(config.PROXY_TOKEN),
     }
 

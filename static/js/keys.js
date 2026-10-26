@@ -103,13 +103,20 @@ async function addKey(ev) {
   }
 }
 
+let loadSeq = 0;
+
 async function load() {
+  const seq = ++loadSeq;
   try {
     const [keys, usage] = await Promise.all([api("/api/keys"), api("/api/key-usage")]);
+    if (seq !== loadSeq) return;
     renderKeys(keys);
     renderUsage(usage);
   } catch (e) {
-    console.error(e);
+    if (seq !== loadSeq) return;
+    $("keys").innerHTML = `<p class="text-sm text-[#f0a0a0]">${esc(e.message)}</p>`;
+    $("key-usage").innerHTML =
+      '<tr><td colspan="4" class="px-5 py-6 text-[#f0a0a0]">Could not load usage.</td></tr>';
   }
 }
 

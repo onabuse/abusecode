@@ -1,6 +1,8 @@
-import { $, api, esc, fmt, toast, copyText } from "./lib.js";
+import { $, api, esc, fmt, toast, copyText, debounce } from "./lib.js";
 
 let catalogData = [];
+let loadSeq = 0;
+let catalogSeq = 0;
 
 function renderModels(rows) {
   const body = $("models-body");
@@ -79,32 +81,40 @@ function renderCatalog(filter = "") {
 }
 
 async function loadCatalog(refresh = false) {
+  const seq = ++catalogSeq;
   try {
     const cat = await api("/api/catalog" + (refresh ? "?refresh=true" : ""));
+    if (seq !== catalogSeq) return;
     catalogData = cat.data || [];
     $("catalog-meta").textContent = cat.error
       ? "upstream error: " + cat.error
       : `${catalogData.length} models · ${cat.cached ? "cached" : "fetched"} ${cat.fetched_at ? new Date(cat.fetched_at).toLocaleTimeString() : ""}`;
     renderCatalog($("catalog-search").value);
   } catch (e) {
+    if (seq !== catalogSeq) return;
     $("catalog-meta").textContent = "catalog error: " + e.message;
   }
 }
 
 async function load() {
+  const seq = ++loadSeq;
   try {
     const [models, endpoints] = await Promise.all([
       api("/api/models"),
       api("/api/endpoints"),
     ]);
+    if (seq !== loadSeq) return;
     renderModels(models);
     renderEndpoints(endpoints);
   } catch (e) {
-    console.error(e);
+    if (seq !== loadSeq) return;
+    $("models-body").innerHTML = `<tr><td colspan="8" class="px-5 py-6 text-[#f0a0a0]">${esc(e.message)}</td></tr>`;
+    $("endpoints").innerHTML = `<p class="text-sm text-[#f0a0a0]">Could not load endpoints.</p>`;
   }
 }
 
-$("catalog-search").addEventListener("input", (e) => renderCatalog(e.target.value));
+const onSearch = debounce((value) => renderCatalog(value), 120);
+$("catalog-search").addEventListener("input", (e) => onSearch(e.target.value));
 $("catalog-refresh").addEventListener("click", async () => {
   toast("Refreshing catalog…");
   await loadCatalog(true);

@@ -3,6 +3,7 @@ import { $, api, toast } from "./lib.js";
 const out = $("pg-output");
 const statusPill = $("pg-status");
 const meta = $("pg-meta");
+let controller = null;
 
 function setStatus(text, ok = true) {
   statusPill.textContent = text;
@@ -56,7 +57,10 @@ async function send(e) {
   const max = Number($("pg-max").value) || 512;
   if (!input) return toast("Enter a prompt", true);
 
+  controller?.abort();
+  controller = new AbortController();
   out.textContent = "";
+  out.scrollTop = 0;
   meta.textContent = "…";
   setStatus("running");
   const started = performance.now();
@@ -64,6 +68,7 @@ async function send(e) {
   try {
     const res = await fetch("/v1/responses", {
       method: "POST",
+      signal: controller.signal,
       headers: { "Content-Type": "application/json", Accept: stream ? "text/event-stream" : "application/json" },
       body: JSON.stringify({ model, input, stream, max_output_tokens: max }),
     });

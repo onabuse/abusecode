@@ -54,6 +54,7 @@ async function load() {
     $("prev").style.opacity = state.offset <= 0 ? ".4" : "1";
     $("next").style.opacity = state.offset + state.limit >= data.total ? ".4" : "1";
   } catch (e) {
+    if (seq !== loadSeq) return;
     $("logs").innerHTML = `<tr><td colspan="10" class="px-5 py-6 text-[#f0a0a0]">${esc(e.message)}</td></tr>`;
   }
 }

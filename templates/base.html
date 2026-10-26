@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/app.css" />
+  <link rel="stylesheet" href="/static/css/app.css?v={{ version }}" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='1.7' stroke-linecap='round'%3E%3Cpath d='M4 12h5l2-5 3 10 2-5h4'/%3E%3C/svg%3E" />
 </head>
 <body class="min-h-screen">
@@ -64,7 +64,8 @@
     <header class="sticky top-0 z-20 border-b border-line bg-bg/85 backdrop-blur">
       <div class="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div class="flex min-w-0 items-center gap-3">
-          <button id="menu-toggle" class="btn btn-ghost p-2 lg:hidden" aria-label="Open menu">
+          <button id="menu-toggle" class="btn btn-ghost p-2 lg:hidden" aria-label="Open menu"
+            aria-controls="sidebar" aria-expanded="false">
             {{ icon("menu", "h-4 w-4") }}
           </button>
           <div class="min-w-0">

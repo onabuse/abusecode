@@ -25,7 +25,8 @@ $("logout")?.addEventListener("click", async () => {
   location.href = "/login";
 });
 
-$("base-origin")?.textContent = location.origin + "/v1";
+const baseOrigin = $("base-origin");
+if (baseOrigin) baseOrigin.textContent = location.origin + "/v1";
 
 async function pollHealth() {
   try {

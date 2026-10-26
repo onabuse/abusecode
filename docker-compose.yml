@@ -1,7 +1,7 @@
 services:
   router:
     build: .
-    image: abusecode-router:latest
+    image: ghcr.io/onabuse/abusecode:latest
     ports:
       - "8000:8000"
     environment:

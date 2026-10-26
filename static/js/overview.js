@@ -138,12 +138,16 @@ function drawChart(series) {
 }
 
 let hours = 24;
+let loadSeq = 0;
 
 async function load() {
+  const seq = ++loadSeq;
   try {
-    renderStats(await api(`/api/stats?hours=${hours}`));
+    const data = await api(`/api/stats?hours=${hours}`);
+    if (seq !== loadSeq) return;
+    renderStats(data);
   } catch (e) {
-    console.error(e);
+    if (seq === loadSeq) console.error(e);
   }
 }
 
@@ -155,4 +159,6 @@ $("range")?.addEventListener("change", (e) => {
 window.addEventListener("app:refresh", load);
 window.addEventListener("resize", debounce(() => drawChart(lastSeries), 150));
 load();
-setInterval(load, 5000);
+setInterval(() => {
+  if (!document.hidden) load();
+}, 5000);

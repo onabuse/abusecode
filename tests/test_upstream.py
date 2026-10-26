@@ -42,3 +42,33 @@ def test_cooldown_mapping():
 def test_request_model():
     assert upstream.request_model(b'{"model":"x"}') == "x"
     assert upstream.request_model(b"not json") is None
+
+
+class _FakeRequest:
+    def __init__(self, headers):
+        from starlette.datastructures import Headers
+
+        self.headers = Headers(headers)
+
+
+def test_build_headers_strips_local_secrets():
+    headers = upstream.build_headers(
+        _FakeRequest(
+            {
+                "cookie": "session=secret",
+                "origin": "http://localhost:8000",
+                "referer": "http://localhost:8000/keys",
+                "sec-fetch-site": "same-origin",
+                "x-forwarded-for": "1.2.3.4",
+                "x-proxy-token": "ptok",
+                "x-custom": "keep",
+                "accept": "application/json",
+            }
+        ),
+        "oc_sk_test",
+    )
+    lowered = {k.lower() for k in headers}
+    for blocked in ("cookie", "origin", "referer", "sec-fetch-site", "x-forwarded-for", "x-proxy-token"):
+        assert blocked not in lowered
+    assert headers["Authorization"] == "Bearer oc_sk_test"
+    assert headers["x-custom"] == "keep"

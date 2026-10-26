@@ -15,7 +15,7 @@ Built with **FastAPI · Jinja2 · TailwindCSS · SQLite**.
 - **Rotation + failover** — least-recently-used key first, retries next key on `401/403/429/5xx`
 - **Key health + cooldown** — failed keys cool down (honors upstream `Retry-After`)
 - **Dashboard auth** — optional admin token + signed session cookie (`/login`)
-- **Proxy auth** — optional client token for `/v1/*`
+- **Proxy auth** — optional client token for `/v1/*` (same-origin dashboard calls stay allowed)
 - **Usage metering** — requests, tokens, latency, status, per-model and per-key stats
 - **Logs** — filters, pagination, CSV/JSON export
 - **Model catalog** — live upstream `/v1/models` with search (cached)
@@ -52,7 +52,7 @@ and related headers, so clients only send the model + input.
 |---|---|
 | `ABUSECODE_ADMIN_TOKEN` | Protects the dashboard + `/api/*`; enables `/login`. Empty = open. |
 | `ABUSECODE_SECRET` | Signs the session cookie (auto-generated per process if empty). |
-| `ABUSECODE_PROXY_TOKEN` | When set, `/v1/*` requires `Authorization: Bearer <token>` or `x-proxy-token`. |
+| `ABUSECODE_PROXY_TOKEN` | When set, external `/v1/*` calls require `Authorization: Bearer <token>` or `x-proxy-token`. Same-origin dashboard/playground requests are exempt. |
 
 ### Configuration
 
@@ -81,6 +81,10 @@ and related headers, so clients only send the model + input.
 ### Pages
 
 `/` overview · `/playground` · `/keys` · `/models` · `/logs` · `/settings`
+
+### Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ### Layout
 
@@ -115,7 +119,7 @@ pip install -r requirements-dev.txt
 npm install
 npm run watch:css      # in one terminal
 uvicorn app.main:app --reload
-pytest                 # 13 tests
+pytest                 # API, DB and JS syntax tests
 ruff check app tests
 ```
 

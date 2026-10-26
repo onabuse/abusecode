@@ -10,18 +10,30 @@ function renderKeys(keys) {
   box.innerHTML = keys
     .map((k) => {
       const last = k.last_used_at ? new Date(k.last_used_at).toLocaleString() : "never used";
-      return `<div class="tile flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+      const cooling = !!k.cooling;
+      const pill = !k.active ? "pill-idle" : cooling ? "pill-err" : "pill-ok";
+      const label = !k.active ? "off" : cooling ? "cooling" : "active";
+      const until = cooling && k.cooldown_until
+        ? ` · until ${new Date(k.cooldown_until).toLocaleTimeString()}`
+        : "";
+      const fails = k.fail_count
+        ? ` · ${k.fail_count} fail${k.fail_count === 1 ? "" : "s"}`
+        : "";
+      return `<div class="tile flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+        title="${esc(k.last_error || "")}">
         <div class="min-w-0">
           <div class="flex items-center gap-2">
             <span class="h-1.5 w-1.5 rounded-full ${k.active ? "bg-accent" : "bg-[#555]"}"></span>
             <span class="mono truncate text-[13px] text-fg">${esc(k.name)}</span>
-            <span class="pill ${k.active ? "pill-ok" : "pill-idle"}">${k.active ? "active" : "off"}</span>
+            <span class="pill ${pill}">${label}</span>
           </div>
-          <div class="mono mt-1 truncate text-[11px] text-dim">${esc(k.masked)} · ${esc(last)}</div>
+          <div class="mono mt-1 truncate text-[11px] text-dim">${esc(k.masked)} · ${esc(last + fails + until)}</div>
         </div>
         <div class="flex shrink-0 items-center gap-2">
           <button data-act="toggle" data-id="${k.id}" data-active="${k.active ? 1 : 0}"
             class="btn btn-ghost px-2.5 py-1 text-[11px]">${k.active ? "Disable" : "Enable"}</button>
+          ${cooling ? `<button data-act="reset" data-id="${k.id}"
+            class="btn btn-ghost px-2.5 py-1 text-[11px]">Reset</button>` : ""}
           <button data-act="del" data-id="${k.id}"
             class="btn btn-danger px-2.5 py-1 text-[11px]">Delete</button>
         </div>
@@ -33,6 +45,7 @@ function renderKeys(keys) {
     btn.addEventListener("click", () => {
       const id = btn.dataset.id;
       if (btn.dataset.act === "toggle") patchKey(id, btn.dataset.active !== "1");
+      else if (btn.dataset.act === "reset") patchKey(id, true);
       else if (confirm("Delete this key? This cannot be undone.")) delKey(id);
     });
   });

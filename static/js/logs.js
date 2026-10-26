@@ -30,9 +30,13 @@ async function load() {
   if (state.model) params.set("model", state.model);
   if (state.status) params.set("status", state.status);
 
+  const exportParams = new URLSearchParams();
+  if (state.model) exportParams.set("model", state.model);
+  if (state.status) exportParams.set("status", state.status);
+  const exportQs = exportParams.toString();
   for (const [id, fmt] of [["export-csv", "csv"], ["export-json", "json"]]) {
     const link = $(id);
-    if (link) link.href = `/api/logs/export?format=${fmt}&${params.toString()}`;
+    if (link) link.href = `/api/logs/export?format=${fmt}${exportQs ? `&${exportQs}` : ""}`;
   }
 
   try {

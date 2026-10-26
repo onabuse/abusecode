@@ -87,6 +87,14 @@ def add_key(name, api_key):
         return cur.lastrowid
 
 
+def key_exists(api_key):
+    with conn() as c:
+        row = c.execute(
+            "SELECT id FROM keys WHERE api_key=?", (api_key.strip(),)
+        ).fetchone()
+    return bool(row)
+
+
 def list_keys():
     with conn() as c:
         rows = c.execute("SELECT * FROM keys ORDER BY id DESC").fetchall()
@@ -234,6 +242,10 @@ def stats(hours=24):
             "FROM usage"
         ).fetchone()
         active = c.execute("SELECT COUNT(*) n FROM keys WHERE active=1").fetchone()["n"]
+        cooling = c.execute(
+            "SELECT COUNT(*) n FROM keys WHERE active=1 AND cooldown_until > ?",
+            (now(),),
+        ).fetchone()["n"]
         by_model = c.execute(
             "SELECT COALESCE(model,'unknown') model, COUNT(*) n, "
             "COALESCE(SUM(total_tokens),0) tok FROM usage "
@@ -279,7 +291,8 @@ def stats(hours=24):
         "errors": totals["err"],
         "success_rate": (totals["ok"] / n * 100) if n else 100.0,
         "avg_latency": round(totals["lat"] or 0),
-        "active_keys": active,
+        "active_keys": active - cooling,
+        "cooling_keys": cooling,
         "by_model": [dict(r) for r in by_model],
         "by_endpoint": [dict(r) for r in by_endpoint],
         "by_key": [dict(r) for r in by_key],

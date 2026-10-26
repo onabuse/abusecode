@@ -17,6 +17,9 @@ $("sidebar-close")?.addEventListener("click", () => setSidebar(false));
 backdrop?.addEventListener("click", () => setSidebar(false));
 window.addEventListener("keydown", (e) => e.key === "Escape" && setSidebar(false));
 sidebar?.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setSidebar(false)));
+window.addEventListener("resize", () => {
+  if (window.innerWidth >= 1024) setSidebar(false);
+});
 
 $("global-refresh")?.addEventListener("click", () => {
   window.dispatchEvent(new CustomEvent("app:refresh"));

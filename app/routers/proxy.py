@@ -55,28 +55,29 @@ async def proxy(path: str, request: Request):
     )
 
     elapsed = int((time.perf_counter() - started) * 1000)
+    # Intermediate failover attempts only affect key health. Logging each of them
+    # as usage would double-count one client request in stats and recent logs.
     for failure in failures:
         status = failure.get("status", 0)
         cooldown = upstream.cooldown_for(status, failure.get("retry_after"))
         db.mark_key_failure(failure["key"]["id"], status, failure["error"], cooldown)
+
+    if resp is None:
+        message = failures[-1]["error"] if failures else "All keys failed"
         db.log_usage(
-            key_id=failure["key"]["id"],
-            key_name=failure["key"]["name"],
             model=req_model,
             endpoint=endpoint,
             method=request.method,
-            status=status,
+            status=502,
             latency_ms=elapsed,
             stream=stream,
-            error=failure["error"],
+            error=message,
         )
-
-    if resp is None:
         return JSONResponse(
             {
                 "error": {
                     "type": "upstream_error",
-                    "message": failures[-1]["error"] if failures else "All keys failed",
+                    "message": message,
                 }
             },
             status_code=502,

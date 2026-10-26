@@ -71,9 +71,14 @@ async function send(e) {
     const reqId = res.headers.get("x-abuse-request-id") || "";
     setStatus(String(res.status), res.ok);
 
-    if (!res.ok && !stream) {
-      const body = await res.json().catch(() => ({}));
-      out.textContent = body?.error?.message || JSON.stringify(body, null, 2);
+    if (!res.ok) {
+      const raw = await res.text();
+      let message = raw;
+      try {
+        const body = JSON.parse(raw);
+        message = body?.error?.message || body?.detail || JSON.stringify(body, null, 2);
+      } catch {}
+      out.textContent = message || `HTTP ${res.status}`;
       meta.textContent = `HTTP ${res.status} · ${reqId}`;
       return;
     }

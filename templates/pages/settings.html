@@ -45,6 +45,10 @@
         ("OPENCODE_API_BASE", "Upstream inference base", "https://opencode.ai/inference"),
         ("OPENCODE_SESSION", "Default session id", "random per request"),
         ("OPENCODE_USER_AGENT", "Upstream user agent", "opencode CLI"),
+        ("ABUSECODE_ADMIN_TOKEN", "Dashboard + API auth", "empty (open)"),
+        ("ABUSECODE_PROXY_TOKEN", "External /v1 auth", "empty (open)"),
+        ("ABUSECODE_SECRET", "Session signing secret", "auto per process"),
+        ("ABUSECODE_SESSION_MAX_AGE", "Session lifetime (seconds)", "43200"),
         ("HOST / PORT", "Bind address", "0.0.0.0:8000")
       ] %}
       <div class="tile px-3 py-2">

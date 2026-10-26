@@ -31,10 +31,13 @@ export async function api(path, opts = {}) {
     ...opts,
   });
   if (!res.ok) {
+    if (res.status === 401 && !path.startsWith("/api/login") && location.pathname !== "/login") {
+      location.href = "/login";
+    }
     let msg = res.statusText;
     try {
       const body = await res.json();
-      msg = body.detail || body.error || msg;
+      msg = body.detail || body.error?.message || body.error || msg;
     } catch {}
     throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
@@ -58,7 +61,21 @@ export function timeOf(ts) {
 
 export async function copyText(text) {
   try {
-    await navigator.clipboard.writeText(text);
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      // Android/LAN over plain http has no async clipboard API.
+      const field = document.createElement("textarea");
+      field.value = text;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      const ok = document.execCommand("copy");
+      field.remove();
+      if (!ok) throw new Error("copy failed");
+    }
     toast("Copied");
   } catch {
     toast("Copy failed", true);

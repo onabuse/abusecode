@@ -3,7 +3,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 APP_NAME = "abusecode.router"
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 
 DATA_DIR = os.environ.get("ABUSECODE_DATA", os.path.join(BASE_DIR, "data"))
 DB_PATH = os.environ.get("ABUSECODE_DB", os.path.join(DATA_DIR, "abusecode.db"))

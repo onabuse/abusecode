@@ -1,5 +1,6 @@
 import hmac
 import secrets
+from urllib.parse import urlparse
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, RedirectResponse
@@ -32,6 +33,23 @@ def check_admin_token(token):
     return bool(token) and hmac.compare_digest(token, config.ADMIN_TOKEN)
 
 
+def is_same_origin(request):
+    """True for browser requests originating from this dashboard itself.
+
+    The built-in playground calls /v1 from the same origin. When a proxy token
+    is configured we still allow those dashboard calls through, while external
+    clients must present the token.
+    """
+    if request.headers.get("sec-fetch-site") == "same-origin":
+        return True
+    host = request.headers.get("host", "")
+    for header in ("origin", "referer"):
+        value = request.headers.get(header) or ""
+        if value and urlparse(value).netloc == host:
+            return True
+    return False
+
+
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         path = request.url.path
@@ -43,7 +61,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         # Proxy has its own optional token and must stay API-friendly.
         if path.startswith("/v1/"):
-            if proxy_authorized(request):
+            if proxy_authorized(request) or is_same_origin(request):
                 return await call_next(request)
             return JSONResponse(
                 {

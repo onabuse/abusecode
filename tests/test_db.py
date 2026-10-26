@@ -59,3 +59,13 @@ def test_usage_queries(tmp_db):
 
     db.clear_usage()
     assert db.query_logs()["total"] == 0
+
+
+def test_stats_separates_cooling_keys(tmp_db):
+    from app import db
+
+    key_id = db.add_key("cooling", "oc_sk_cooling")
+    db.mark_key_failure(key_id, 429, "rate limited", 60)
+    stats = db.stats(24)
+    assert stats["active_keys"] == 0
+    assert stats["cooling_keys"] == 1

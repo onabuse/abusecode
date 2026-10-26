@@ -17,15 +17,23 @@ CATALOG_TTL = 60
 _catalog = {"ts": 0.0, "data": None, "error": None, "fetched_at": None}
 
 
+def invalidate_catalog():
+    """Drop the cached upstream model list (after key changes)."""
+    _catalog.update({"ts": 0.0, "data": None, "error": None, "fetched_at": None})
+
+
 @router.get("/health")
 async def health():
+    keys = db.list_keys()
+    cooling = sum(1 for k in keys if k["active"] and k["cooling"])
     return {
         "ok": True,
         "app": config.APP_NAME,
         "version": config.APP_VERSION,
         "upstream": config.UPSTREAM,
-        "active_keys": len(db.active_keys()),
-        "total_keys": len(db.list_keys()),
+        "active_keys": sum(1 for k in keys if k["active"] and not k["cooling"]),
+        "cooling_keys": cooling,
+        "total_keys": len(keys),
         "proxy_token": bool(config.PROXY_TOKEN),
     }
 

@@ -28,6 +28,11 @@ def test_keys_flow(client):
     assert r.status_code == 200
     key_id = r.json()["id"]
 
+    duplicate = client.post(
+        "/api/keys", json={"name": "again", "api_key": "oc_sk_1234567890abcdef"}
+    )
+    assert duplicate.status_code == 409
+
     keys = client.get("/api/keys").json()
     assert keys[0]["name"] == "primary"
     assert "..." in keys[0]["masked"]
@@ -66,3 +71,29 @@ def test_dashboard_auth(tmp_db, monkeypatch):
         assert c.post("/api/login", json={"token": "sekret"}).status_code == 200
         assert c.get("/api/keys").status_code == 200
         assert c.get("/", follow_redirects=False).status_code == 200
+
+
+def test_proxy_token_and_same_origin(tmp_db, monkeypatch):
+    from app import config
+
+    monkeypatch.setattr(config, "PROXY_TOKEN", "ptok")
+    with TestClient(app) as c:
+        r = c.post("/v1/responses", json={"model": "m", "input": "hi"})
+        assert r.status_code == 401
+
+        for headers in (
+            {"x-proxy-token": "ptok"},
+            {"authorization": "Bearer ptok"},
+            {"sec-fetch-site": "same-origin"},
+        ):
+            r = c.post("/v1/responses", json={"model": "m", "input": "hi"}, headers=headers)
+            assert r.status_code == 503, headers
+
+
+def test_key_change_invalidates_catalog(client):
+    from app.routers import usage
+
+    usage._catalog.update({"ts": 9e9, "data": [{"id": "stale"}], "error": None})
+    r = client.post("/api/keys", json={"name": "k", "api_key": "oc_sk_catalog"})
+    assert r.status_code == 200
+    assert usage._catalog["data"] is None

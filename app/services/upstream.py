@@ -87,15 +87,23 @@ def wants_stream(request, body: bytes):
         return False
 
 
+# Headers that must never be forwarded to the upstream provider.
+STRIP_REQUEST_HEADERS = {
+    "host", "content-length", "authorization", "connection",
+    "accept-encoding", "transfer-encoding", "cookie", "origin", "referer",
+    "x-real-ip", "x-proxy-token", "x-api-key",
+}
+
+
 def build_headers(request, api_key: str):
     headers = {}
-    for k, v in request.headers.items():
-        if k.lower() in (
-            "host", "content-length", "authorization", "connection",
-            "accept-encoding", "transfer-encoding",
-        ):
+    for name, value in request.headers.items():
+        key = name.lower()
+        if key in STRIP_REQUEST_HEADERS:
             continue
-        headers[k] = v
+        if key.startswith(("sec-fetch-", "x-forwarded-")):
+            continue
+        headers[name] = value
     headers["Authorization"] = f"Bearer {api_key}"
     headers.setdefault("Content-Type", "application/json")
 

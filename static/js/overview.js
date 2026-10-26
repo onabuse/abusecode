@@ -1,6 +1,7 @@
-import { $, api, fmt, esc, statusPill, timeOf, copyText } from "./lib.js";
+import { $, api, fmt, esc, statusPill, timeOf, copyText, debounce } from "./lib.js";
 
 const base = location.origin + "/v1";
+let lastSeries = [];
 $("base-url").textContent = base;
 $("copy-base").addEventListener("click", () => copyText(base));
 
@@ -10,9 +11,12 @@ function renderStats(s) {
   $("stat-rate").textContent = (s.success_rate ?? 100).toFixed(1) + "%";
   $("stat-latency").textContent = "avg " + fmt(s.avg_latency) + " ms";
   $("stat-keys").textContent = fmt(s.active_keys);
+  const sub = $("stat-keys-sub");
+  if (sub) sub.textContent = s.cooling_keys ? `${s.cooling_keys} cooling down` : "rotation ready";
   renderModels(s.by_model || []);
   renderRecent(s.recent || []);
-  drawChart(s.series || []);
+  lastSeries = s.series || [];
+  drawChart(lastSeries);
 }
 
 function renderModels(models) {
@@ -86,8 +90,9 @@ function drawChart(series) {
   const chartH = h - padB - padT;
   const max = Math.max(1, ...series.map((p) => p.count));
   const n = series.length || 24;
-  const gap = 3;
-  const bw = Math.max(2, (w - gap * (n - 1)) / n);
+  // Keep 7d/30d ranges inside the canvas instead of overflowing to the right.
+  const gap = n > 96 ? 1 : n > 48 ? 2 : 3;
+  const bw = Math.max(1, (w - gap * (n - 1)) / n);
 
   ctx.strokeStyle = "#252525";
   ctx.lineWidth = 1;
@@ -148,6 +153,6 @@ $("range")?.addEventListener("change", (e) => {
 });
 
 window.addEventListener("app:refresh", load);
-window.addEventListener("resize", () => load());
+window.addEventListener("resize", debounce(() => drawChart(lastSeries), 150));
 load();
 setInterval(load, 5000);

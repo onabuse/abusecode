@@ -33,6 +33,17 @@ def branch():
     return r.stdout.strip() or "main"
 
 
+def changed_paths(status):
+    paths = []
+    for line in status.splitlines():
+        path = line[3:].strip()
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1]
+        if path:
+            paths.append(path)
+    return paths
+
+
 def commit_push():
     status = run("git", "status", "--porcelain").stdout.strip()
     if not status:
@@ -40,12 +51,14 @@ def commit_push():
 
     count = len(status.splitlines())
     stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    paths = changed_paths(status)
+    listed = ", ".join(paths[:4]) + (" …" if len(paths) > 4 else "")
     run("git", "add", "-A")
     commit = run(
         "git",
         "-c", f"user.name={NAME}",
         "-c", f"user.email={EMAIL}",
-        "commit", "-m", f"chore(autosync): {count} file(s) @ {stamp}",
+        "commit", "-m", f"chore(autosync): {count} file(s) [{listed}] @ {stamp}",
     )
     if commit.returncode != 0:
         log("commit failed: " + (commit.stderr or commit.stdout).strip()[:300])

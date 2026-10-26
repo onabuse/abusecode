@@ -22,7 +22,10 @@ function rowsHtml(items) {
     .join("");
 }
 
+let loadSeq = 0;
+
 async function load() {
+  const seq = ++loadSeq;
   const params = new URLSearchParams({
     limit: state.limit,
     offset: state.offset,
@@ -41,6 +44,7 @@ async function load() {
 
   try {
     const data = await api("/api/logs?" + params.toString());
+    if (seq !== loadSeq) return;
     $("logs").innerHTML = rowsHtml(data.items);
     const start = data.total ? state.offset + 1 : 0;
     const end = Math.min(state.offset + state.limit, data.total);
